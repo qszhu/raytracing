@@ -1,10 +1,12 @@
 use vec3::Vec3;
 use ray::Ray;
+use material::Material;
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub t: f32,
     pub p: Vec3,
-    pub normal: Vec3
+    pub normal: Vec3,
+    pub mat_ptr: &'a Material
 }
 
 /*************************************************************************************************/
@@ -38,12 +40,13 @@ impl Hitable for HitableList {
 /*************************************************************************************************/
 pub struct Sphere {
     pub center: Vec3,
-    pub radius: f32
+    pub radius: f32,
+    mat_ptr: Box<Material>
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f32) -> Self {
-        Sphere { center, radius }
+    pub fn new(center: Vec3, radius: f32, mat_ptr: Box<Material>) -> Self {
+        Sphere { center, radius, mat_ptr }
     }
 }
 
@@ -57,7 +60,7 @@ impl Hitable for Sphere {
         let hit = |t: f32| -> Option<HitRecord> {
             if t <= t_min || t >= t_max { return None }
             let p = r.point_at(t);
-            return Some(HitRecord { t, p, normal: (p - self.center) / self.radius })
+            return Some(HitRecord { t, p, normal: (p - self.center) / self.radius, mat_ptr: &*self.mat_ptr })
         };
         if discriminant > 0. {
             let h = hit((-b - discriminant.sqrt())/a);
