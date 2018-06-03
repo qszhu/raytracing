@@ -3,6 +3,7 @@ import sys
 from random import random
 
 from tqdm import tqdm
+from PIL import Image
 
 from hitable import HitRecord, HitableList, Sphere
 from vec3 import Vec3
@@ -42,11 +43,10 @@ def random_scene():
     hitables.append(Sphere(Vec3(4, 1, 0), 1.0, Metal(Vec3(0.7, 0.6, 0.5), 0.0)))
     return HitableList(hitables)
 
-def main():
+def main(fn):
     nx, ny, ns, nd = 200, 100, 100, 10
-    print 'P3'
-    print nx, ny
-    print 255
+    img = Image.new('RGB', (nx, ny))
+    px = img.load()
     world = random_scene()
     lookfrom = Vec3(13,2,3)
     lookat = Vec3(0,0,0)
@@ -63,7 +63,8 @@ def main():
             col /= float(ns)
             col = Vec3(math.sqrt(col[0]), math.sqrt(col[1]), math.sqrt(col[2]))
             ir, ig, ib = int(255.99*col[0]), int(255.99*col[1]), int(255.99*col[2])
-            print ir, ig, ib
+            px[i, j] = (ir, ig, ib)
+    img.save(fn)
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1])
