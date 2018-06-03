@@ -1,15 +1,16 @@
 import math
 import sys
 from random import random
-
-from tqdm import tqdm
-from PIL import Image
+from multiprocessing import cpu_count, Pool
 
 from hitable import HitRecord, HitableList, Sphere
 from vec3 import Vec3
 from ray import Ray
 from camera import Camera
 from material import Lambertian, Metal, Dielectric
+from PIL import Image
+
+from tqdm import tqdm
 
 def color(r, world, depth):
     rec = HitRecord()
@@ -43,28 +44,49 @@ def random_scene():
     hitables.append(Sphere(Vec3(4, 1, 0), 1.0, Metal(Vec3(0.7, 0.6, 0.5), 0.0)))
     return HitableList(hitables)
 
-def main(fn):
-    nx, ny, ns, nd = 200, 100, 100, 10
-    img = Image.new('RGB', (nx, ny))
-    px = img.load()
-    world = random_scene()
-    lookfrom = Vec3(13,2,3)
-    lookat = Vec3(0,0,0)
-    dist_to_focus = 10.0
-    aperture = 0.1
-    cam = Camera(lookfrom, lookat, Vec3(0,1,0), 20, float(nx)/ny, aperture, dist_to_focus)
-    for j in tqdm(range(ny)):
-        for i in range(nx):
-            col = Vec3(0, 0, 0)
-            for s in range(ns):
-                u, v = (i+random())/nx, ((ny-1-j)+random())/ny
-                r = cam.getRay(u, v)
-                col += color(r, world, nd)
-            col /= float(ns)
-            col = Vec3(math.sqrt(col[0]), math.sqrt(col[1]), math.sqrt(col[2]))
-            ir, ig, ib = int(255.99*col[0]), int(255.99*col[1]), int(255.99*col[2])
-            px[i, j] = (ir, ig, ib)
-    img.save(fn)
+def renderPixel(x, y):
+    col = Vec3(0, 0, 0)
+    for s in range(ns):
+        u, v = (x+random())/nx, (ny-1-y+random())/ny
+        r = cam.getRay(u, v)
+        col += color(r, world, nd)
+    col /= float(ns)
+    col = Vec3(math.sqrt(col[0]), math.sqrt(col[1]), math.sqrt(col[2]))
+    return x, y, col
 
-if __name__ == '__main__':
-    main(sys.argv[1])
+def cb(res):
+    x, y, col = res
+    px[x, y] = int(255.9*col[0]), int(255.9*col[1]), int(255.9*col[2])
+    pbar.update(1)
+
+def render():
+    pool = Pool(workers)
+
+    for x in range(nx):
+        for y in range(ny):
+            pool.apply_async(renderPixel, (x, y), callback=cb)
+
+    pool.close()
+    pool.join()
+    pbar.close()
+
+fn = sys.argv[1]
+# nx, ny, ns, nd = 1200, 800, 1000, 10
+nx, ny, ns, nd = 200, 100, 100, 10
+
+img = Image.new('RGB', (nx, ny))
+px = img.load()
+pbar = tqdm(total=nx*ny)
+
+world = random_scene()
+
+lookfrom = Vec3(13,2,3)
+lookat = Vec3(0,0,0)
+dist_to_focus = 10.0
+aperture = 0.1
+cam = Camera(lookfrom, lookat, Vec3(0,1,0), 20, float(nx)/ny, aperture, dist_to_focus)
+
+workers = cpu_count()
+render()
+
+img.save(fn)
