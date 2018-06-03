@@ -6,7 +6,7 @@ from hitable import HitRecord, HitableList, Sphere
 from vec3 import Vec3
 from ray import Ray
 from camera import Camera
-from material import Lambertian, Metal
+from material import Lambertian, Metal, Dielectric
 
 def color(r, world, depth=0):
     rec = HitRecord()
@@ -27,10 +27,11 @@ def main():
     print nx, ny
     print 255
     world = HitableList([
-        Sphere(Vec3(0,0,-1), 0.5, Lambertian(Vec3(0.8, 0.3, 0.3))),
+        Sphere(Vec3(0,0,-1), 0.5, Lambertian(Vec3(0.1, 0.2, 0.5))),
         Sphere(Vec3(0,-100.5,-1), 100, Lambertian(Vec3(0.8, 0.8, 0.0))),
-        Sphere(Vec3(1,0,-1), 0.5, Metal(Vec3(0.8, 0.6, 0.2), 1.0)),
-        Sphere(Vec3(-1,0,-1), 0.5, Metal(Vec3(0.8, 0.8, 0.8), 0.3))
+        Sphere(Vec3(1,0,-1), 0.5, Metal(Vec3(0.8, 0.6, 0.2))),
+        Sphere(Vec3(-1,0,-1), 0.5, Dielectric(1.5)),
+        Sphere(Vec3(-1,0,-1), -0.45, Dielectric(1.5))
     ])
     cam = Camera()
     for j in reversed(range(ny)):
