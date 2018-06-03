@@ -92,7 +92,8 @@ fn random_scene() -> Box<Hitable> {
 }
 
 fn main() {
-    let (nx, ny, ns, nd) = (200, 100, 100, 10);
+    // let (nx, ny, ns, nd) = (200, 100, 100, 10);
+    let (nx, ny, ns, nd) = (1200, 800, 100, 10);
     let world = random_scene();
 
     let lookfrom = Vec3::new(13.,2.,3.);
