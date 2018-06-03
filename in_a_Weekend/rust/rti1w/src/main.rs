@@ -57,7 +57,11 @@ fn main() {
 
     let world = HitableList::new(list);
 
-    let cam = Camera::new(Vec3::new(-2.,2.,1.), Vec3::new(0.,0.,-1.), Vec3::new(0.,1.,0.), 20., nx as f32 / ny as f32);
+    let lookfrom = Vec3::new(3.,3.,2.);
+    let lookat = Vec3::new(0.,0.,-1.);
+    let dist_to_focus = (lookfrom-lookat).length();
+    let aperture = 2.0;
+    let cam = Camera::new(lookfrom, lookat, Vec3::new(0.,1.,0.), 20., nx as f32 / ny as f32, aperture, dist_to_focus);
 
     let mut rng = rand::thread_rng();
     let mut r = || -> f32 { rng.gen() };
