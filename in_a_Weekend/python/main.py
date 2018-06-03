@@ -10,13 +10,13 @@ from ray import Ray
 from camera import Camera
 from material import Lambertian, Metal, Dielectric
 
-def color(r, world, depth=0):
+def color(r, world, depth):
     rec = HitRecord()
     if world.hit(r, 0.001, sys.float_info.max, rec):
         scattered = Ray()
         attenuation = Vec3()
-        if depth < 50 and rec.material.scatter(r, rec, attenuation, scattered):
-            return attenuation*color(scattered, world, depth+1)
+        if depth > 0 and rec.material.scatter(r, rec, attenuation, scattered):
+            return attenuation*color(scattered, world, depth-1)
         return Vec3()
 
     unit_direction = Vec3.Unit(r.direction)
@@ -43,7 +43,7 @@ def random_scene():
     return HitableList(hitables)
 
 def main():
-    nx, ny, ns = 200, 100, 100
+    nx, ny, ns, nd = 200, 100, 100, 10
     print 'P3'
     print nx, ny
     print 255
@@ -59,7 +59,7 @@ def main():
             for s in range(ns):
                 u, v = (i+random())/nx, ((ny-1-j)+random())/ny
                 r = cam.getRay(u, v)
-                col += color(r, world)
+                col += color(r, world, nd)
             col /= float(ns)
             col = Vec3(math.sqrt(col[0]), math.sqrt(col[1]), math.sqrt(col[2]))
             ir, ig, ib = int(255.99*col[0]), int(255.99*col[1]), int(255.99*col[2])
