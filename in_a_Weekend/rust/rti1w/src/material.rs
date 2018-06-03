@@ -22,7 +22,7 @@ pub struct Lambertian {
 }
 
 impl Lambertian {
-    pub fn new(albedo: Vec3) -> Self {
+    pub fn new(albedo: Vec3) -> Lambertian {
         Lambertian { albedo }
     }
 }
@@ -53,7 +53,7 @@ pub struct Metal {
 }
 
 impl Metal {
-    pub fn new(albedo: Vec3, fuzz: f32) -> Self {
+    pub fn new(albedo: Vec3, fuzz: f32) -> Metal {
         Metal { albedo, fuzz: fuzz.min(1.) }
     }
 }
@@ -73,6 +73,64 @@ impl Material for Metal {
             })
         } else {
             None
+        }
+    }
+}
+
+/*************************************************************************************************/
+fn refrect(v: Vec3, n: Vec3, ni_over_nt: f32) -> Option<Vec3> {
+    let uv = Vec3::unit(v);
+    let dt = uv.dot(n);
+    let discriminant = 1.0 - ni_over_nt*ni_over_nt*(1.0-dt*dt);
+    if discriminant > 0.0 {
+        Some(ni_over_nt*(uv - n*dt) - n*discriminant.sqrt())
+    } else {
+        None
+    }
+}
+
+fn schlick(cosine: f32, ref_idx: f32) -> f32 {
+    let mut r0 = (1.0-ref_idx) / (1.0+ref_idx);
+    r0 *= r0;
+    return r0 + (1.0-r0)*(1.0-cosine).powf(5.0);
+}
+
+pub struct Dielectric {
+    pub ref_idx: f32
+}
+
+impl Dielectric {
+    pub fn new(ref_idx: f32) -> Dielectric {
+        Dielectric { ref_idx }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, r_in: &Ray, hit: &HitRecord) -> Option<ScatterRecord> {
+        let reflected = reflect(r_in.direction, hit.normal);
+        let attenuation = Vec3::new(1.0, 1.0, 1.0);
+        let outward_normal;
+        let ni_over_nt;
+        let reflect_prob;
+        let cosine;
+        if r_in.direction.dot(hit.normal) > 0.0 {
+            outward_normal = -hit.normal;
+            ni_over_nt = self.ref_idx;
+            cosine = self.ref_idx * r_in.direction.dot(hit.normal) / r_in.direction.length();
+        } else {
+            outward_normal = hit.normal;
+            ni_over_nt = 1.0 / self.ref_idx;
+            cosine = -r_in.direction.dot(hit.normal) / r_in.direction.length();
+        }
+        if let Some(refracted) = refrect(r_in.direction, outward_normal, ni_over_nt) {
+            reflect_prob = schlick(cosine, self.ref_idx);
+            if rand::random::<f32>() < reflect_prob {
+                Some(ScatterRecord { attenuation, scattered: Ray::new(hit.p, reflected) })
+            } else {
+                Some(ScatterRecord { attenuation, scattered: Ray::new(hit.p, refracted) })
+            }
+        } else {
+            Some(ScatterRecord { attenuation, scattered: Ray::new(hit.p, reflected) })
         }
     }
 }

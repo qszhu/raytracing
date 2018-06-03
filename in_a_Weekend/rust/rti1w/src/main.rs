@@ -12,7 +12,7 @@ use vec3::{Vec3, Color};
 use ray::Ray;
 use hitable::{Hitable, HitableList, Sphere};
 use camera::Camera;
-use material::{Lambertian, Metal};
+use material::{Lambertian, Metal, Dielectric};
 
 fn color(r: &Ray, world: &Hitable, depth: i32) -> Vec3 {
     if let Some(hit) = world.hit(r, 0.001, f32::MAX) {
@@ -34,18 +34,27 @@ fn main() {
     println!("P3\n{} {}\n255", nx, ny);
 
     let mut list: Vec<Box<Hitable>> = Vec::new();
-    let material1 = Lambertian::new(Vec3::new(0.8, 0.3, 0.3));
+
+    let material1 = Lambertian::new(Vec3::new(0.1, 0.2, 0.5));
     let sphere1 = Sphere::new(Vec3::new(0.,0.,-1.), 0.5, Box::new(material1));
     list.push(Box::new(sphere1));
+
     let material2 = Lambertian::new(Vec3::new(0.8, 0.8, 0.0));
     let sphere2 = Sphere::new(Vec3::new(0.,-100.5,-1.), 100., Box::new(material2));
     list.push(Box::new(sphere2));
-    let material3 = Metal::new(Vec3::new(0.8, 0.6, 0.2), 1.0);
+
+    let material3 = Metal::new(Vec3::new(0.8, 0.6, 0.2), 0.3);
     let sphere3 = Sphere::new(Vec3::new(1.,0.,-1.), 0.5, Box::new(material3));
     list.push(Box::new(sphere3));
-    let material4 = Metal::new(Vec3::new(0.8, 0.8, 0.8), 0.3);
+
+    let material4 = Dielectric::new(1.5);
     let sphere4 = Sphere::new(Vec3::new(-1.,0.,-1.), 0.5, Box::new(material4));
     list.push(Box::new(sphere4));
+
+    let material5 = Dielectric::new(1.5);
+    let sphere5 = Sphere::new(Vec3::new(-1.,0.,-1.), -0.45, Box::new(material5));
+    list.push(Box::new(sphere5));
+
     let world = HitableList::new(list);
 
     let cam = Camera::new();
