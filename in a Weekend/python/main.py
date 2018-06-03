@@ -6,17 +6,16 @@ from hitable import HitRecord, HitableList, Sphere
 from vec3 import Vec3
 from ray import Ray
 from camera import Camera
+from material import Lambertian, Metal
 
-def random_in_unit_sphere():
-    while True:
-        p = 2.0*Vec3(random(),random(),random()) - Vec3(1,1,1)
-        if p.dot(p) < 1: return p
-
-def color(r, world):
+def color(r, world, depth=0):
     rec = HitRecord()
     if world.hit(r, 0.001, sys.float_info.max, rec):
-        target = rec.p + rec.normal + random_in_unit_sphere()
-        return 0.5*color(Ray(rec.p, target-rec.p), world)
+        scattered = Ray()
+        attenuation = Vec3()
+        if depth < 50 and rec.material.scatter(r, rec, attenuation, scattered):
+            return attenuation*color(scattered, world, depth+1)
+        return Vec3()
 
     unit_direction = Vec3.Unit(r.direction)
     t = 0.5*(unit_direction.y + 1.0)
@@ -28,8 +27,10 @@ def main():
     print nx, ny
     print 255
     world = HitableList([
-        Sphere(Vec3(0,0,-1), 0.5),
-        Sphere(Vec3(0,-100.5,-1), 100)
+        Sphere(Vec3(0,0,-1), 0.5, Lambertian(Vec3(0.8, 0.3, 0.3))),
+        Sphere(Vec3(0,-100.5,-1), 100, Lambertian(Vec3(0.8, 0.8, 0.0))),
+        Sphere(Vec3(1,0,-1), 0.5, Metal(Vec3(0.8, 0.6, 0.2), 1.0)),
+        Sphere(Vec3(-1,0,-1), 0.5, Metal(Vec3(0.8, 0.8, 0.8), 0.3))
     ])
     cam = Camera()
     for j in reversed(range(ny)):

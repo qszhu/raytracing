@@ -8,11 +8,13 @@ class HitRecord(object):
         self.t = None
         self.p = None
         self.normal = None
+        self.material = None
 
     def update(self, other):
         self.t = other.t
         self.p = other.p
         self.normal = other.normal
+        self.material = other.material
 
 class Hitable(object):
 
@@ -38,10 +40,11 @@ class HitableList(Hitable):
 
 class Sphere(Hitable):
 
-    def __init__(self, cen=None, r=0.0):
+    def __init__(self, cen=None, r=0.0, material=None):
         if cen is None: cen = Vec3()
         self.center = cen
         self.radius = r
+        self.material = material
 
     def hit(self, r, t_min, t_max, rec):
         def updateRec(t):
@@ -50,6 +53,7 @@ class Sphere(Hitable):
             rec.t = t
             rec.p = r.pointAt(rec.t)
             rec.normal = (rec.p - self.center) / self.radius
+            rec.material = self.material
             return True
 
         oc = r.origin - self.center
