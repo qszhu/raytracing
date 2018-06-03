@@ -39,7 +39,7 @@ fn main() {
     let sphere1 = Sphere::new(Vec3::new(0.,0.,-1.), 0.5, Box::new(material1));
     list.push(Box::new(sphere1));
 
-    let material2 = Lambertian::new(Vec3::new(0.8, 0.8, 0.0));
+    let material2 = Lambertian::new(Vec3::new(0.8, 0.8, 0.));
     let sphere2 = Sphere::new(Vec3::new(0.,-100.5,-1.), 100., Box::new(material2));
     list.push(Box::new(sphere2));
 
@@ -57,7 +57,7 @@ fn main() {
 
     let world = HitableList::new(list);
 
-    let cam = Camera::new();
+    let cam = Camera::new(Vec3::new(-2.,2.,1.), Vec3::new(0.,0.,-1.), Vec3::new(0.,1.,0.), 20., nx as f32 / ny as f32);
 
     let mut rng = rand::thread_rng();
     let mut r = || -> f32 { rng.gen() };
