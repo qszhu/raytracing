@@ -5,3 +5,4 @@ authors = ["Qinsi ZHU <qszhu2006@gmail.com>"]
 
 [dependencies]
 rand = "0.5"
+indicatif = "0.9"

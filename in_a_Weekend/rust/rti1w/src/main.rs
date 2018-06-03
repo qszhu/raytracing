@@ -1,4 +1,6 @@
 extern crate rand;
+extern crate indicatif;
+
 mod vec3;
 mod ray;
 mod hitable;
@@ -7,6 +9,7 @@ mod material;
 
 use std::f32;
 use rand::Rng;
+use indicatif::{ProgressBar, ProgressStyle};
 
 use vec3::{Vec3, Color};
 use ray::Ray;
@@ -95,11 +98,15 @@ fn main() {
     let aperture = 0.1;
     let cam = Camera::new(lookfrom, lookat, Vec3::new(0.,1.,0.), 20., nx as f32 / ny as f32, aperture, dist_to_focus);
 
+    let pb = ProgressBar::new(ny);
+    pb.set_style(ProgressStyle::default_bar()
+        .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {percent:>3}% ({eta_precise})")
+        .progress_chars("#>-"));
     let mut rng = rand::thread_rng();
     let mut r = || -> f32 { rng.gen() };
     for j in 0..ny {
         for i in 0..nx {
-            let mut col = Vec3::new(0., 0., 0.);
+            let mut col = Vec3::zero();
             for _s in 0..ns {
                 let u = (i as f32 + r()) / nx as f32;
                 let v = ((ny-1-j) as f32 + r()) / ny as f32;
@@ -111,5 +118,7 @@ fn main() {
             let c = Color::from_vec3(&col);
             println!("{} {} {}", c.r, c.g, c.b);
         }
+        pb.inc(1);
     }
+    pb.finish();
 }
