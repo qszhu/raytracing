@@ -1,5 +1,6 @@
 extern crate rand;
 extern crate indicatif;
+extern crate image;
 
 mod vec3;
 mod ray;
@@ -8,8 +9,10 @@ mod camera;
 mod material;
 
 use std::f32;
+use std::env;
 use rand::Rng;
 use indicatif::{ProgressBar, ProgressStyle};
+use image::{ImageBuffer, Rgb};
 
 use vec3::{Vec3, Color};
 use ray::Ray;
@@ -88,8 +91,6 @@ fn random_scene() -> Box<Hitable> {
 
 fn main() {
     let (nx, ny, ns, nd) = (200, 100, 100, 10);
-    println!("P3\n{} {}\n255", nx, ny);
-
     let world = random_scene();
 
     let lookfrom = Vec3::new(13.,2.,3.);
@@ -98,7 +99,8 @@ fn main() {
     let aperture = 0.1;
     let cam = Camera::new(lookfrom, lookat, Vec3::new(0.,1.,0.), 20., nx as f32 / ny as f32, aperture, dist_to_focus);
 
-    let pb = ProgressBar::new(ny);
+    let mut img = ImageBuffer::new(nx, ny);
+    let pb = ProgressBar::new(ny as u64);
     pb.set_style(ProgressStyle::default_bar()
         .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {percent:>3}% ({eta_precise})")
         .progress_chars("#>-"));
@@ -116,9 +118,10 @@ fn main() {
             col /= ns as f32;
             col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
             let c = Color::from_vec3(&col);
-            println!("{} {} {}", c.r, c.g, c.b);
+            img.put_pixel(i, j, Rgb{ data: [c.r, c.g, c.b] });
         }
         pb.inc(1);
     }
     pb.finish();
+    img.save(env::args().nth(1).unwrap()).unwrap();
 }
