@@ -2,6 +2,8 @@ import math
 import sys
 from random import random
 
+from tqdm import tqdm
+
 from hitable import HitRecord, HitableList, Sphere
 from vec3 import Vec3
 from ray import Ray
@@ -51,11 +53,11 @@ def main():
     dist_to_focus = 10.0
     aperture = 0.1
     cam = Camera(lookfrom, lookat, Vec3(0,1,0), 20, float(nx)/ny, aperture, dist_to_focus)
-    for j in reversed(range(ny)):
+    for j in tqdm(range(ny)):
         for i in range(nx):
             col = Vec3(0, 0, 0)
             for s in range(ns):
-                u, v = (i+random())/nx, (j+random())/ny
+                u, v = (i+random())/nx, ((ny-1-j)+random())/ny
                 r = cam.getRay(u, v)
                 col += color(r, world)
             col /= float(ns)
