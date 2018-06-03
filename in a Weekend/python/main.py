@@ -21,22 +21,35 @@ def color(r, world, depth=0):
     t = 0.5*(unit_direction.y + 1.0)
     return (1.0-t)*Vec3(1.0, 1.0, 1.0) + t*Vec3(0.5, 0.7, 1.0)
 
+def random_scene():
+    hitables = []
+    hitables.append(Sphere(Vec3(0,-1000,0), 1000, Lambertian(Vec3(0.5, 0.5, 0.5))))
+    for a in range(-11, 11):
+        for b in range(-11, 11):
+            choose_mat = random()
+            center = Vec3(a+0.9*random(), 0.2, b+0.9*random())
+            if (center-Vec3(4,0.2,0)).length > 0.9:
+                if choose_mat < 0.8:
+                    hitables.append(Sphere(center, 0.2, Lambertian(Vec3(random()*random(), random()*random(), random()*random()))))
+                elif choose_mat < 0.95:
+                    hitables.append(Sphere(center, 0.2, Metal(Vec3(0.5*(1 + random()), 0.5*(1 + random()), 0.5*(1+random())), 0.5*random())))
+                else:
+                    hitables.append(Sphere(center, 0.2, Dielectric(1.5)))
+    hitables.append(Sphere(Vec3(0, 1, 0), 1.0, Dielectric(1.5)))
+    hitables.append(Sphere(Vec3(-4, 1, 0), 1.0, Lambertian(Vec3(0.4, 0.2, 0.1))))
+    hitables.append(Sphere(Vec3(4, 1, 0), 1.0, Metal(Vec3(0.7, 0.6, 0.5), 0.0)))
+    return HitableList(hitables)
+
 def main():
     nx, ny, ns = 200, 100, 100
     print 'P3'
     print nx, ny
     print 255
-    world = HitableList([
-        Sphere(Vec3(0,0,-1), 0.5, Lambertian(Vec3(0.1, 0.2, 0.5))),
-        Sphere(Vec3(0,-100.5,-1), 100, Lambertian(Vec3(0.8, 0.8, 0.0))),
-        Sphere(Vec3(1,0,-1), 0.5, Metal(Vec3(0.8, 0.6, 0.2))),
-        Sphere(Vec3(-1,0,-1), 0.5, Dielectric(1.5)),
-        Sphere(Vec3(-1,0,-1), -0.45, Dielectric(1.5))
-    ])
-    lookfrom = Vec3(3,3,2)
-    lookat = Vec3(0,0,-1)
-    dist_to_focus = (lookfrom-lookat).length
-    aperture = 2.0
+    world = random_scene()
+    lookfrom = Vec3(13,2,3)
+    lookat = Vec3(0,0,0)
+    dist_to_focus = 10.0
+    aperture = 0.1
     cam = Camera(lookfrom, lookat, Vec3(0,1,0), 20, float(nx)/ny, aperture, dist_to_focus)
     for j in reversed(range(ny)):
         for i in range(nx):
