@@ -10,7 +10,7 @@ pub struct HitRecord<'a> {
 }
 
 /*************************************************************************************************/
-pub trait Hitable {
+pub trait Hitable: Sync {
     fn hit(&self, r: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
 }
 
@@ -41,11 +41,11 @@ impl Hitable for HitableList {
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
-    mat_ptr: Box<Material>
+    mat_ptr: Box<Material+Sync>
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f32, mat_ptr: Box<Material>) -> Self {
+    pub fn new(center: Vec3, radius: f32, mat_ptr: Box<Material+Sync>) -> Self {
         Sphere { center, radius, mat_ptr }
     }
 }

@@ -7,3 +7,4 @@ authors = ["Qinsi ZHU <qszhu2006@gmail.com>"]
 rand = "0.5"
 indicatif = "0.9"
 image = "0.19"
+rayon = "1.0"

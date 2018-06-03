@@ -1,6 +1,7 @@
 extern crate rand;
 extern crate indicatif;
 extern crate image;
+extern crate rayon;
 
 mod vec3;
 mod ray;
@@ -13,6 +14,7 @@ use std::env;
 use rand::Rng;
 use indicatif::{ProgressBar, ProgressStyle};
 use image::{ImageBuffer, Rgb};
+use rayon::prelude::*;
 
 use vec3::{Vec3, Color};
 use ray::Ray;
@@ -104,11 +106,13 @@ fn main() {
     pb.set_style(ProgressStyle::default_bar()
         .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {percent:>3}% ({eta_precise})")
         .progress_chars("#>-"));
-    let mut rng = rand::thread_rng();
-    let mut r = || -> f32 { rng.gen() };
-    for j in 0..ny {
-        for i in 0..nx {
+    let mut data = vec![];
+    data.par_extend((0..ny).into_par_iter().map(|j| {
+        let mut row = vec![];
+        row.par_extend((0..nx).into_par_iter().map(|i| {
             let mut col = Vec3::zero();
+            let mut rng = rand::thread_rng();
+            let mut r = || -> f32 { rng.gen() };
             for _s in 0..ns {
                 let u = (i as f32 + r()) / nx as f32;
                 let v = ((ny-1-j) as f32 + r()) / ny as f32;
@@ -118,10 +122,17 @@ fn main() {
             col /= ns as f32;
             col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
             let c = Color::from_vec3(&col);
+            c
+        }));
+        pb.inc(1);
+        row
+    }));
+    pb.finish();
+    for j in 0..ny {
+        for i in 0..nx {
+            let c = &data[j as usize][i as usize];
             img.put_pixel(i, j, Rgb{ data: [c.r, c.g, c.b] });
         }
-        pb.inc(1);
     }
-    pb.finish();
     img.save(env::args().nth(1).unwrap()).unwrap();
 }
