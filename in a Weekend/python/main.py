@@ -33,7 +33,11 @@ def main():
         Sphere(Vec3(-1,0,-1), 0.5, Dielectric(1.5)),
         Sphere(Vec3(-1,0,-1), -0.45, Dielectric(1.5))
     ])
-    cam = Camera(Vec3(-2,2,1), Vec3(0,0,-1), Vec3(0,1,0), 20, nx/float(ny))
+    lookfrom = Vec3(3,3,2)
+    lookat = Vec3(0,0,-1)
+    dist_to_focus = (lookfrom-lookat).length
+    aperture = 2.0
+    cam = Camera(lookfrom, lookat, Vec3(0,1,0), 20, float(nx)/ny, aperture, dist_to_focus)
     for j in reversed(range(ny)):
         for i in range(nx):
             col = Vec3(0, 0, 0)
