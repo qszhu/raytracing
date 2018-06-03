@@ -33,7 +33,7 @@ def main():
         Sphere(Vec3(-1,0,-1), 0.5, Dielectric(1.5)),
         Sphere(Vec3(-1,0,-1), -0.45, Dielectric(1.5))
     ])
-    cam = Camera()
+    cam = Camera(Vec3(-2,2,1), Vec3(0,0,-1), Vec3(0,1,0), 20, nx/float(ny))
     for j in reversed(range(ny)):
         for i in range(nx):
             col = Vec3(0, 0, 0)

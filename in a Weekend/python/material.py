@@ -30,7 +30,7 @@ def reflect(v, n):
 
 class Metal(Material):
 
-    def __init__(self, a, f=0):
+    def __init__(self, a, f=0.3):
         self.albedo = a
         self.fuzz = min(f, 1.0)
 
