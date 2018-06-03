@@ -29,9 +29,6 @@ class Vec3(object):
     def b(self):
         return self.e[2]
 
-    def __pos__(self):
-        return self
-
     def __neg__(self):
         x, y, z = self.e
         return Vec3(-x, -y, -z)
@@ -83,7 +80,7 @@ class Vec3(object):
         return math.sqrt(self.dot(self))
 
     @property
-    def unitVector(self):
+    def unit(self):
         return self / self.length
 
     def dot(self, v2):
@@ -99,23 +96,6 @@ class Vec3(object):
             -(x1*z2 - z1*x2),
             x1*y2 - y1*x2
         )
-
-    def update(self, other):
-        self.e[0] = other.e[0]
-        self.e[1] = other.e[1]
-        self.e[2] = other.e[2]
-
-    @staticmethod
-    def Unit(v):
-        return v.unitVector
-
-    @staticmethod
-    def Dot(v1, v2):
-        return v1.dot(v2)
-
-    @staticmethod
-    def Cross(v1, v2):
-        return v1.cross(v2)
 
     def __repr__(self):
         return 'Vec3({}, {}, {})'.format(self.e[0], self.e[1], self.e[2])
@@ -133,9 +113,6 @@ if __name__ == '__main__':
     v = Vec3(1, 2, 3)
     assert v.x == 1 and v.y == 2 and v.z == 3
     assert v.r == 1 and v.g == 2 and v.b == 3
-
-    v = +v
-    assert v.x == 1 and v.y == 2 and v.z == 3
 
     v = -v
     assert v.x == -1 and v.y == -2 and v.z == -3
@@ -182,7 +159,7 @@ if __name__ == '__main__':
 
     a = Vec3(3, 0, -4)
     assert a.length == 5
-    assert a.unitVector == Vec3(0.6, 0, -0.8)
+    assert a.unit == Vec3(0.6, 0, -0.8)
 
     c = a.dot(b)
     assert c == -12

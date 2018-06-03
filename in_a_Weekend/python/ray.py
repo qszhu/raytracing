@@ -19,10 +19,6 @@ class Ray(object):
     def pointAt(self, t):
         return self.A + t*self.B
 
-    def update(self, other):
-        self.A.update(other.A)
-        self.B.update(other.B)
-
 if __name__ == '__main__':
     r = Ray()
     assert r.origin == Vec3(0, 0, 0)

@@ -13,13 +13,10 @@ python main.py out.png
 ```
 
 ### running time
-#### single core
-width | height | samples/pixel | bounces | time
---- | --- | --- | --- | ---
-200 | 100 | 100 | 50 | 1m31s
-200 | 100 | 100 | 10 | 1m23s
-
-#### multi-core
-width | height | samples/pixel | bounces | time
---- | --- | --- | --- | ---
-200 | 100 | 100 | 10 | 36s
+width | height | samples/pixel | bounces | time | workers
+--- | --- | --- | --- | --- | ---
+200 | 100 | 100 | 50 | 47s | 1
+200 | 100 | 100 | 10 | 45s | 1
+200 | 100 | 100 | 10 | 24s | 2
+200 | 100 | 100 | 10 | 15s | 4
+200 | 100 | 100 | 10 | 19s | 8

@@ -7,7 +7,7 @@ from ray import Ray
 def random_in_unit_disk():
     while True:
         p = 2.0*Vec3(random(),random(),0) - Vec3(1,1,0)
-        if Vec3.Dot(p,p) < 1: return p
+        if p.dot(p) < 1: return p
 
 class Camera(object):
 
@@ -17,9 +17,9 @@ class Camera(object):
         half_height = math.tan(theta/2)
         half_width = aspect * half_height
         self.origin = lookfrom
-        self.w = Vec3.Unit(lookfrom - lookat)
-        self.u = Vec3.Unit(Vec3.Cross(vup, self.w))
-        self.v = Vec3.Cross(self.w, self.u)
+        self.w = (lookfrom - lookat).unit
+        self.u = vup.cross(self.w).unit
+        self.v = self.w.cross(self.u)
         self.lower_left_corner = self.origin - half_width*focus_dist*self.u - half_height*focus_dist*self.v - focus_dist*self.w
         self.horizontal = 2*half_width*focus_dist*self.u
         self.vertical = 2*half_height*focus_dist*self.v

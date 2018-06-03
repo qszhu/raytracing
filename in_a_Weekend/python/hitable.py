@@ -10,12 +10,6 @@ class HitRecord(object):
         self.normal = None
         self.material = None
 
-    def update(self, other):
-        self.t = other.t
-        self.p = other.p
-        self.normal = other.normal
-        self.material = other.material
-
 class Hitable(object):
 
     def hit(self, r, t_min, t_max, rec):
@@ -27,16 +21,15 @@ class HitableList(Hitable):
         if l is None: l = []
         self.list = l
 
-    def hit(self, r, t_min, t_max, rec):
-        temp_rec = HitRecord()
-        hit_anything = False
+    def hit(self, r, t_min, t_max):
+        res = False
         closest_so_far = t_max
         for hitable in self.list:
-            if hitable.hit(r, t_min, closest_so_far, temp_rec):
-                hit_anything = True
-                closest_so_far = temp_rec.t
-                rec.update(temp_rec)
-        return hit_anything
+            h = hitable.hit(r, t_min, closest_so_far)
+            if not h: continue
+            closest_so_far = h.t
+            res = h
+        return res
 
 class Sphere(Hitable):
 
@@ -46,24 +39,26 @@ class Sphere(Hitable):
         self.radius = r
         self.material = material
 
-    def hit(self, r, t_min, t_max, rec):
+    def hit(self, r, t_min, t_max):
         def updateRec(t):
             if not (t_min < t < t_max):
                 return False
-            rec.t = t
-            rec.p = r.pointAt(rec.t)
-            rec.normal = (rec.p - self.center) / self.radius
-            rec.material = self.material
-            return True
+            res = HitRecord()
+            res.t = t
+            res.p = r.pointAt(t)
+            res.normal = (res.p - self.center) / self.radius
+            res.material = self.material
+            return res
 
         oc = r.origin - self.center
-        a = Vec3.Dot(r.direction, r.direction)
-        b = Vec3.Dot(oc, r.direction)
-        c = Vec3.Dot(oc, oc) - self.radius*self.radius
+        a = r.direction.dot(r.direction)
+        b = oc.dot(r.direction)
+        c = oc.dot(oc) - self.radius*self.radius
         discriminant = b*b - a*c
         if discriminant > 0:
-            temp = (-b - math.sqrt(discriminant))/a
-            if updateRec(temp): return True
-            temp = (-b + math.sqrt(discriminant))/a
-            if updateRec(temp): return True
+            res = updateRec((-b - math.sqrt(discriminant))/a)
+            if not res:
+                res = updateRec((-b + math.sqrt(discriminant))/a)
+            if res: return res
+
         return False

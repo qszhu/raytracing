@@ -13,15 +13,15 @@ from PIL import Image
 from tqdm import tqdm
 
 def color(r, world, depth):
-    rec = HitRecord()
-    if world.hit(r, 0.001, sys.float_info.max, rec):
-        scattered = Ray()
-        attenuation = Vec3()
-        if depth > 0 and rec.material.scatter(r, rec, attenuation, scattered):
-            return attenuation*color(scattered, world, depth-1)
+    hit = world.hit(r, 0.001, sys.float_info.max)
+    if hit:
+        if depth > 0:
+            scatter = hit.material.scatter(r, hit)
+            if scatter:
+                return scatter.attenuation*color(scatter.scattered, world, depth-1)
         return Vec3()
 
-    unit_direction = Vec3.Unit(r.direction)
+    unit_direction = r.direction.unit
     t = 0.5*(unit_direction.y + 1.0)
     return (1.0-t)*Vec3(1.0, 1.0, 1.0) + t*Vec3(0.5, 0.7, 1.0)
 
@@ -71,8 +71,10 @@ def render():
     pbar.close()
 
 fn = sys.argv[1]
-# nx, ny, ns, nd = 1200, 800, 1000, 10
+workers = cpu_count()/2
+print 'workers', workers
 nx, ny, ns, nd = 200, 100, 100, 10
+# nx, ny, ns, nd = 1200, 800, 1000, 10
 
 img = Image.new('RGB', (nx, ny))
 px = img.load()
@@ -86,7 +88,6 @@ dist_to_focus = 10.0
 aperture = 0.1
 cam = Camera(lookfrom, lookat, Vec3(0,1,0), 20, float(nx)/ny, aperture, dist_to_focus)
 
-workers = cpu_count()
 render()
 
 img.save(fn)
