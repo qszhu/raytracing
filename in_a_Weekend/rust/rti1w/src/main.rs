@@ -12,9 +12,19 @@ use ray::Ray;
 use hitable::{Hitable, HitableList, Sphere};
 use camera::Camera;
 
+fn random_in_unit_sphere() -> Vec3 {
+    let mut rng = rand::thread_rng();
+    let mut r = || -> f32 { rng.gen() };
+    loop {
+        let p = 2.0*Vec3::new(r(), r(), r()) - Vec3::new(1.,1.,1.);
+        if p.dot(p) < 1.0 { return p }
+    }
+}
+
 fn color(r: &Ray, world: &Hitable) -> Vec3 {
-    if let Some(hit) = world.hit(r, 0.0, f32::MAX) {
-        return 0.5*Vec3::new(hit.normal.x+1., hit.normal.y+1., hit.normal.z+1.);
+    if let Some(hit) = world.hit(r, 0.001, f32::MAX) {
+        let target = hit.p + hit.normal + random_in_unit_sphere();
+        return 0.5*color(&Ray::new(hit.p, target-hit.p), world);
     } else {
         let unit_direction = Vec3::unit(r.direction);
         let t = 0.5*(unit_direction.y + 1.0);
@@ -45,6 +55,7 @@ fn main() {
                 col += color(&r, &world);
             }
             col /= ns as f32;
+            col = Vec3::new(col.x.sqrt(), col.y.sqrt(), col.z.sqrt());
             let c = Color::from_vec3(&col);
             println!("{} {} {}", c.r, c.g, c.b);
         }
