@@ -1,0 +1,63 @@
+class Util {
+  static LFSR32Rand lfsr;
+
+  function void init(int a, int b) {
+    let lfsr = LFSR32Rand.new();
+    do lfsr.seed(a, b);
+    return;
+  }
+
+  function Float rand() {
+    var Float res, t;
+    let res = Float.new(); do res.setInt(lfsr.rand());
+    do res.divInt(32767);
+    return res;
+  }
+
+  function Vec3 randomVec() {
+    var Vec3 p, t;
+    var Float x, y, z;
+    let x = Util.rand(); let y = Util.rand(); let z = Util.rand();
+    let p = Vec3.newXYZ(x, y, z);
+    do p.multInt(2);
+    let t = Vec3.newXYZi(1, 1, 1);
+    do p.sub(t);
+    do t.dispose();
+    return p;
+  }
+
+  function Vec3 randomInUnitSphere() {
+    var Vec3 p;
+    var Float l;
+    let p = Util.randomVec();
+    let l = p.dot(p);
+    while (~(l.compareInt(1) < 0)) {
+      do l.dispose(); do p.dispose();
+      let p = Util.randomVec();
+      let l = p.dot(p);
+    }
+    do l.dispose();
+    return p;
+  }
+
+  function Vec3 randomInUnitDisk() {
+    var Vec3 p;
+    var Float z;
+    let p = Util.randomInUnitSphere();
+    let z = Float.new(); do z.setInt(0);
+    do p.setXYZ(p.x(), p.y(), z);
+    do z.dispose();
+    return p;
+  }
+
+  function Float sampleRatio(int p, int q) {
+    var Float f, r;
+
+    let f = Float.new(); do f.setInt(p);
+    let r = Util.rand(); do f.add(r); do r.dispose();
+    do f.divInt(q);
+
+    return f;
+  }
+
+}

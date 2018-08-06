@@ -1,0 +1,198 @@
+class Vec3 {
+  field Float e0, e1, e2;
+
+  constructor Vec3 newVec3(Vec3 v) {
+    let e0 = Float.newFloat(v.x());
+    let e1 = Float.newFloat(v.y());
+    let e2 = Float.newFloat(v.z());
+    return this;
+  }
+
+  constructor Vec3 newXYZ(Float x, Float y, Float z) {
+    let e0 = x;
+    let e1 = y;
+    let e2 = z;
+    return this;
+  }
+
+  constructor Vec3 newXYZi(int x, int y, int z) {
+    let e0 = Float.new(); do e0.setInt(x);
+    let e1 = Float.new(); do e1.setInt(y);
+    let e2 = Float.new(); do e2.setInt(z);
+    return this;
+  }
+
+	method void dispose() {
+    do e0.dispose();
+    do e1.dispose();
+    do e2.dispose();
+		do Memory.deAlloc(this);
+		return;
+	}
+
+  method void set(Vec3 v) {
+    do e0.set(v.x());
+    do e1.set(v.y());
+    do e2.set(v.z());
+    return;
+  }
+
+  method void setXYZ(Float x, Float y, Float z) {
+    do e0.set(x);
+    do e1.set(y);
+    do e2.set(z);
+    return;
+  }
+
+  method Float x() {
+    return e0;
+  }
+
+  method Float y() {
+    return e1;
+  }
+
+  method Float z() {
+    return e2;
+  }
+
+  function int _colorVal(Float v) {
+    var int res;
+    var Float f;
+    let f = Float.newFloat(v);
+    do f.multInt(256);
+    let res = f._floor();
+    do f.dispose();
+    if (res > 255) {
+      let res = 255;
+    }
+    return res;
+  }
+
+  method int r() {
+    return Vec3._colorVal(e0);
+  }
+
+  method int g() {
+    return Vec3._colorVal(e1);
+  }
+
+  method int b() {
+    return Vec3._colorVal(e2);
+  }
+
+  method void add(Vec3 v) {
+    do e0.add(v.x());
+    do e1.add(v.y());
+    do e2.add(v.z());
+    return;
+  }
+
+  method void sub(Vec3 v) {
+    do e0.sub(v.x());
+    do e1.sub(v.y());
+    do e2.sub(v.z());
+    return;
+  }
+
+  method void mult(Vec3 v) {
+    do e0.mult(v.x());
+    do e1.mult(v.y());
+    do e2.mult(v.z());
+    return;
+  }
+
+  method void multFloat(Float f) {
+    do e0.mult(f);
+    do e1.mult(f);
+    do e2.mult(f);
+    return;
+  }
+
+  method void multInt(int i) {
+    do e0.multInt(i);
+    do e1.multInt(i);
+    do e2.multInt(i);
+    return;
+  }
+
+  method void divFloat(Float f) {
+    do e0.div(f);
+    do e1.div(f);
+    do e2.div(f);
+    return;
+  }
+
+  method void divInt(int i) {
+    do e0.divInt(i);
+    do e1.divInt(i);
+    do e2.divInt(i);
+    return;
+  }
+
+  method Float dot(Vec3 v) {
+    var Float res, f;
+    let f = Float.newFloat(e0);
+    do f.mult(v.x());
+    let res = Float.newFloat(f);
+    do f.set(e1);
+    do f.mult(v.y());
+    do res.add(f);
+    do f.set(e2);
+    do f.mult(v.z());
+    do res.add(f);
+    do f.dispose();
+    return res;
+  }
+
+  method Float length() {
+    var Float res;
+    let res = dot(this);
+    do res.sqrt();
+    return res;
+  }
+
+  method void unit() {
+    var Float l;
+    let l = length();
+    do divFloat(l);
+    do l.dispose();
+    return;
+  }
+
+  method void sqrt() {
+    do e0.sqrt();
+    do e1.sqrt();
+    do e2.sqrt();
+    return;
+  }
+
+  function Float Dot(Vec3 a, Vec3 b) {
+    return a.dot(b);
+  }
+
+  function Vec3 Cross(Vec3 a, Vec3 b) {
+    var Float x, y, z, t;
+    let t = Float.new();
+
+    let x = Float.newFloat(a.y()); do x.mult(b.z());
+    do t.set(a.z()); do t.mult(b.y()); do x.sub(t);
+
+    let y = Float.newFloat(a.z()); do y.mult(b.x());
+    do t.set(a.x()); do t.mult(b.z()); do y.sub(t);
+
+    let z = Float.newFloat(a.x()); do z.mult(b.y());
+    do t.set(a.y()); do t.mult(b.x()); do z.sub(t);
+
+    do t.dispose();
+    return Vec3.newXYZ(x, y, z);
+  }
+
+  function Vec3 Unit(Vec3 v) {
+    var Vec3 res;
+    let res = Vec3.newVec3(v);
+    do res.unit();
+    return res;
+  }
+
+}

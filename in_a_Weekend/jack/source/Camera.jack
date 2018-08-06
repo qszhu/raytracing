@@ -1,0 +1,90 @@
+class Camera {
+  field Vec3 _origin, _lowerLeftCorner, _horizontal, _vertical;
+  field Vec3 _u, _v, _w;
+  field Float _lensRadius;
+
+  constructor Camera new(Vec3 lookfrom, Vec3 lookat, Vec3 vup, Float vfov,
+    Float aspect, Float aperture, Float focusDist) {
+    var Vec3 t;
+    var Float halfWidth, halfHeight, theta;
+
+    let _lensRadius = aperture; do _lensRadius.divInt(2);
+    // let theta = vfov; do theta.divInt(2);
+    // let halfHeight = Camera._tan(theta);
+    // do theta.dispose();
+    // vfov = 20; tan(vfov/2) = 0.17633
+    let halfHeight = Float.new(); do halfHeight.setInt(17633);
+    do halfHeight.divInt(10000); do halfHeight.divInt(10); do vfov.dispose();
+    let halfWidth = aspect; do halfWidth.mult(halfHeight);
+
+    let _w = Vec3.newVec3(lookfrom); do _w.sub(lookat); do _w.unit(); do lookat.dispose();
+    let _u = Vec3.Cross(vup, _w); do _u.unit(); do vup.dispose();
+    let _v = Vec3.Cross(_w, _u);
+
+    let _origin = lookfrom;
+
+    let _lowerLeftCorner = Vec3.newVec3(_origin);
+    let t = Vec3.newVec3(_u); do t.multFloat(focusDist); do t.multFloat(halfWidth);
+    do _lowerLeftCorner.sub(t); do t.dispose();
+    let t = Vec3.newVec3(_v); do t.multFloat(focusDist); do t.multFloat(halfHeight);
+    do _lowerLeftCorner.sub(t); do t.dispose();
+    let t = Vec3.newVec3(_w); do t.multFloat(focusDist);
+    do _lowerLeftCorner.sub(t); do t.dispose();
+
+    let _horizontal = Vec3.newVec3(_u);
+    do _horizontal.multInt(2); do _horizontal.multFloat(halfWidth); do _horizontal.multFloat(focusDist);
+
+    let _vertical = Vec3.newVec3(_v);
+    do _vertical.multInt(2); do _vertical.multFloat(halfHeight); do _vertical.multFloat(focusDist);
+
+    do halfWidth.dispose();
+    do halfHeight.dispose();
+    do focusDist.dispose();
+    return this;
+  }
+
+  method void dispose() {
+    do _origin.dispose();
+    do _lowerLeftCorner.dispose();
+    do _horizontal.dispose();
+    do _vertical.dispose();
+    do _u.dispose();
+    do _v.dispose();
+    do _w.dispose();
+    do _lensRadius.dispose();
+    do Memory.deAlloc(this);
+    return;
+  }
+
+  method Ray getRay(Float u, Float v) {
+    var Ray res;
+    var Vec3 d, t, rd, offset;
+
+    let rd = Util.randomInUnitDisk(); do rd.multFloat(_lensRadius);
+
+    let offset = Vec3.newVec3(_u); do offset.multFloat(rd.x());
+    let t = Vec3.newVec3(_v); do t.multFloat(rd.y());
+    do offset.add(t); do t.dispose();
+    do rd.dispose();
+
+    let d = Vec3.newVec3(_lowerLeftCorner);
+
+    let t = Vec3.newVec3(_horizontal);
+    do t.multFloat(u);
+    do d.add(t);
+
+    do t.set(_vertical);
+    do t.multFloat(v);
+    do d.add(t);
+
+    do d.sub(_origin); do d.sub(offset);
+    do t.dispose();
+
+    let t = Vec3.newVec3(_origin); do t.add(offset);
+    let res = Ray.new(t, d);
+
+    do offset.dispose();
+    return res;
+  }
+
+}

@@ -1,0 +1,215 @@
+class Material {
+  field int _type;
+  field Vec3 _albedo;
+  field Float _fuzz;
+  field Float _refIdx;
+
+  constructor Material newLambertian(Vec3 albedo) {
+    let _type = 0;
+    let _albedo = albedo;
+    return this;
+  }
+
+  constructor Material newMetal(Vec3 albedo, Float fuzz) {
+    let _type = 1;
+    let _albedo = albedo;
+    let _fuzz = fuzz;
+    return this;
+  }
+
+  constructor Material newDielectric(Float ri) {
+    let _type = 2;
+    let _albedo = Vec3.newXYZi(1, 1, 1);
+    let _refIdx = ri;
+    return this;
+  }
+
+	method void dispose() {
+    do _albedo.dispose();
+    if (_type = 1) {
+      do _fuzz.dispose();
+    }
+    if (_type = 2) {
+      do _refIdx.dispose();
+    }
+		do Memory.deAlloc(this);
+		return;
+	}
+
+  method ScatterRecord scatter(Ray rIn, HitRecord rec) {
+    if (_type = 0) {
+      return _scatterLambertian(rIn, rec);
+    }
+    if (_type = 1) {
+      return _scatterMetal(rIn, rec);
+    }
+    if (_type = 2) {
+      return _scatterDielectric(rIn, rec);
+    }
+    return null;
+  }
+
+  method ScatterRecord _scatterLambertian(Ray rIn, HitRecord rec) {
+    var Vec3 target, p;
+    var Ray scattered;
+
+    let target = Vec3.newVec3(rec.normal());
+    let p = Util.randomInUnitSphere();
+    do target.add(p);
+    do p.dispose();
+
+    let scattered = Ray.new(Vec3.newVec3(rec.p()), target);
+    return ScatterRecord.new(Vec3.newVec3(_albedo), scattered);
+  }
+
+  function Vec3 _reflect(Vec3 v, Vec3 n) {
+    var Vec3 res;
+    var Float t;
+
+    let t = Vec3.Dot(v, n);
+    do t.multInt(2);
+    do t.neg();
+
+    let res = Vec3.newVec3(n);
+    do res.multFloat(t);
+    do res.add(v);
+
+    do t.dispose();
+    return res;
+  }
+
+  method ScatterRecord _scatterMetal(Ray rIn, HitRecord rec) {
+    var Vec3 reflected, t;
+    var Float t1;
+    var Ray scattered;
+    var bool b;
+
+    let t = Vec3.Unit(rIn.direction());
+    let reflected = Material._reflect(t, rec.normal());
+    do t.dispose();
+
+    let t = Util.randomInUnitSphere();
+    do t.multFloat(_fuzz);
+    do reflected.add(t);
+    do t.dispose();
+
+    let scattered = Ray.new(Vec3.newVec3(rec.p()), reflected);
+    let t1 = Vec3.Dot(scattered.direction(), rec.normal());
+    let b = t1.isPos();
+    do t1.dispose();
+
+    if (b) {
+      return ScatterRecord.new(Vec3.newVec3(_albedo), scattered);
+    }
+
+    do scattered.dispose();
+    return null;
+  }
+
+  function Vec3 _refract(Vec3 v, Vec3 n, Float niOverNt) {
+    var Vec3 uv, res, t;
+    var Float dt, d;
+
+    let uv = Vec3.Unit(v);
+    let dt = Vec3.Dot(uv, n);
+    let d = Float.newFloat(dt); do d.mult(dt); do d.neg(); do d.addInt(1);
+    do d.mult(niOverNt); do d.mult(niOverNt); do d.neg(); do d.addInt(1);
+
+    if (d.isPos()) {
+      let res = Vec3.newVec3(n); do res.multFloat(dt); do res.multInt(-1);
+      do res.add(uv); do res.multFloat(niOverNt);
+
+      do d.sqrt();
+      let t = Vec3.newVec3(n); do t.multFloat(d);
+      do res.sub(t); do t.dispose();
+    } else {
+      let res = null;
+    }
+    do d.dispose();
+    do dt.dispose();
+    do uv.dispose();
+    return res;
+  }
+
+  function Float _schlick(Float cosine, Float refIdx) {
+    var Float p, q, r0;
+
+    let p = Float.new(); do p.setInt(1); do p.sub(refIdx);
+    let q = Float.new(); do q.setInt(1); do q.add(refIdx);
+    do p.div(q);
+    do q.dispose();
+
+    let r0 = Float.newFloat(p); do r0.mult(p);
+    do p.dispose();
+
+    let p = Float.new(); do p.setInt(1); do p.sub(cosine);
+    let q = Float.newFloat(p); do q.mult(p); do q.mult(p);
+    do q.mult(p); do q.mult(p);
+    do p.dispose();
+
+    let p = Float.new(); do p.setInt(1); do p.sub(r0);
+    do p.mult(q);
+
+    do r0.add(p);
+    do p.dispose();
+    do q.dispose();
+    return r0;
+  }
+
+  method ScatterRecord _scatterDielectric(Ray rIn, HitRecord rec) {
+    var Vec3 reflected, refracted, outwardNormal, tp;
+    var Float niOverNt, cosine, reflectProb, t;
+    var Ray scattered;
+    var ScatterRecord res;
+    var bool b;
+
+    let t = Vec3.Dot(rIn.direction(), rec.normal());
+    let b = t.isPos(); do t.dispose();
+    if (b) {
+      let outwardNormal = Vec3.newVec3(rec.normal());
+      do outwardNormal.multInt(-1);
+
+      let niOverNt = Float.newFloat(_refIdx);
+
+      let cosine = Vec3.Dot(rIn.direction(), rec.normal());
+      do cosine.mult(_refIdx);
+      let tp = rIn.direction(); let t = tp.length();
+      do cosine.div(t); do t.dispose();
+    } else {
+      let outwardNormal = Vec3.newVec3(rec.normal());
+
+      let niOverNt = Float.new(); do niOverNt.setInt(1); do niOverNt.div(_refIdx);
+
+      let cosine = Vec3.Dot(rIn.direction(), rec.normal());
+      do cosine.neg();
+      let tp = rIn.direction(); let t = tp.length();
+      do cosine.div(t); do t.dispose();
+    }
+
+    let refracted = Material._refract(rIn.direction(), outwardNormal, niOverNt);
+    if (~(refracted = null)) {
+      let reflectProb = Material._schlick(cosine, _refIdx);
+    } else {
+      let reflectProb = Float.new(); do reflectProb.setInt(1);
+    }
+    do outwardNormal.dispose();
+    do niOverNt.dispose();
+    do cosine.dispose();
+
+    let t = Util.rand();
+    let b = t.compare(reflectProb) < 0; do t.dispose(); do reflectProb.dispose();
+    if (b) {
+      let reflected = Material._reflect(rIn.direction(), rec.normal());
+      let scattered = Ray.new(rec.p(), reflected);
+      if (~(refracted = null)) {
+        do refracted.dispose();
+      }
+    } else {
+      let scattered = Ray.new(rec.p(), refracted);
+    }
+
+    let res = ScatterRecord.new(Vec3.newVec3(_albedo), scattered);
+    return res;
+  }
+
+}

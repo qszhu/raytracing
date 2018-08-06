@@ -1,0 +1,263 @@
+class Main {
+
+  function Vec3 bgColor(Ray r) {
+    var Vec3 unit_direction, v1, v2;
+    var Float t1, t2;
+
+    let unit_direction = Vec3.Unit(r.direction());
+
+    let t2 = Float.newFloat(unit_direction.y());
+    do t2.addInt(1); do t2.divInt(2);
+
+    let t1 = Float.new();
+    do t1.setInt(1); do t1.sub(t2);
+
+    let v1 = Vec3.newXYZi(1, 1, 1);
+    do v1.multFloat(t1);
+
+    let v2 = Vec3.newXYZi(5, 7, 10); do v2.divInt(10);
+    do v2.multFloat(t2);
+
+    do v2.add(v1);
+
+    do v1.dispose();
+    do t2.dispose();
+    do t1.dispose();
+    do unit_direction.dispose();
+    return v2;
+  }
+
+  function Vec3 color(Ray r, World w, int depth) {
+    var Vec3 res;
+    var HitRecord rec;
+    var Float near;
+    var Material mat;
+    var ScatterRecord sr;
+
+    let near = Float.new(); do near.setInt(1); do near.divInt(1000);
+    let rec = w.hit(r, near, Float.posInf());
+    do near.dispose();
+
+    if (~(rec = null)) {
+      let res = Vec3.newXYZi(0, 0, 0);
+      if (depth > 0) {
+        let mat = rec.matPtr();
+        let sr = mat.scatter(r, rec);
+        if (~(sr = null)) {
+          do res.dispose();
+          let res = Main.color(sr.scattered(), w, depth-1);
+          do res.mult(sr.attenuation());
+          do sr.dispose();
+        }
+      }
+      do rec.dispose();
+    } else {
+      let res = Main.bgColor(r);
+    }
+
+    return res;
+  }
+
+  function Material material0() {
+    var Vec3 a;
+    let a = Vec3.newXYZi(5, 5, 5); do a.divInt(10);
+    return Material.newLambertian(a);
+  }
+  function Sphere sphere0() {
+    var Float radius;
+    let radius = Float.new(); do radius.setInt(1000);
+    return Sphere.new(Vec3.newXYZi(0, -1000, 0), radius, Main.material0());
+  }
+
+  function Material material1() {
+    var Float f;
+    let f = Float.new(); do f.setInt(15); do f.divInt(10);
+    return Material.newDielectric(f);
+  }
+  function Sphere sphere1() {
+    var Float radius;
+    let radius = Float.new(); do radius.setInt(1);
+    return Sphere.new(Vec3.newXYZi(0, 1, 0), radius, Main.material1());
+  }
+
+  function Material material2() {
+    var Vec3 a;
+    let a = Vec3.newXYZi(4, 2, 1); do a.divInt(10);
+    return Material.newLambertian(a);
+  }
+  function Sphere sphere2() {
+    var Float radius;
+    let radius = Float.new(); do radius.setInt(1);
+    return Sphere.new(Vec3.newXYZi(-4, 1, 0), radius, Main.material2());
+  }
+
+  function Material material3() {
+    var Vec3 a;
+    var Float f;
+    let a = Vec3.newXYZi(7, 6, 5); do a.divInt(10);
+    let f = Float.new(); do f.setInt(0);
+    return Material.newMetal(a, f);
+  }
+  function Sphere sphere3() {
+    var Float radius;
+    let radius = Float.new(); do radius.setInt(1);
+    return Sphere.new(Vec3.newXYZi(4, 1, 0), radius, Main.material3());
+  }
+
+  function Float _rand1(int i) {
+    var Float res;
+    let res = Util.rand(); do res.multInt(36); do res.divInt(10);
+    do res.addInt(i);
+    return res;
+  }
+
+  function Vec3 _randVec1(int a, int b) {
+    var Float x, y, z;
+    let x = Main._rand1(a);
+    let y = Float.new(); do y.setInt(3); do y.divInt(10);
+    let z = Main._rand1(b); do z.divInt(4);
+    return Vec3.newXYZ(x, y, z);
+  }
+
+  function Float _rand2() {
+    var Float res, t;
+    let res = Util.rand();
+    let t = Util.rand(); do res.mult(t); do t.dispose();
+    return res;
+  }
+
+  function Vec3 _randVec2() {
+    return Vec3.newXYZ(Main._rand2(), Main._rand2(), Main._rand2());
+  }
+
+  function Float _rand3() {
+    var Float res;
+    let res = Util.rand(); do res.addInt(1); do res.divInt(2);
+    return res;
+  }
+
+  function Vec3 _randVec3() {
+    return Vec3.newXYZ(Main._rand3(), Main._rand3(), Main._rand3());
+  }
+
+  function Float _rand4() {
+    var Float res;
+    let res = Util.rand(); do res.divInt(2);
+    return res;
+  }
+
+  function bool _valid(Vec3 center) {
+    var Vec3 c;
+    var Float l;
+    var bool res;
+    let c = Vec3.newXYZi(40, 3, 0); do c.divInt(-10);
+    do c.add(center);
+    let l = c.length(); do l.multInt(10);
+    let res = l.compareInt(9) > 0;
+    do l.dispose();
+    do c.dispose();
+    return res;
+  }
+
+  function world createWorld() {
+    var World res;
+    var int a, b;
+    var Float chooseMat, r;
+    var Vec3 center;
+    var Material mat;
+
+    let res = World.new(50);
+    do res.push(Main.sphere0());
+
+    let a = -11;
+    while (a < 11) {
+      let b = -11;
+      while (b < 11) {
+        let chooseMat = Util.rand(); do chooseMat.multInt(100);
+        let center = Main._randVec1(a, b);
+        if (Main._valid(center)) {
+          if (chooseMat.compareInt(80) < 0) {
+            let mat = Material.newLambertian(Main._randVec2());
+          } else {
+            if (chooseMat.compareInt(95) < 0) {
+              let mat = Material.newMetal(Main._randVec3(), Main._rand4());
+            } else {
+              let mat = Main.material1();
+            }
+          }
+          let r = Float.new(); do r.setInt(3); do r.divInt(10);
+          do res.push(Sphere.new(center, r, mat));
+        } else {
+          do center.dispose();
+        }
+        do chooseMat.dispose();
+        let b = b + 4;
+      }
+      let a = a + 4;
+    }
+
+    do res.push(Main.sphere1());
+    do res.push(Main.sphere2());
+    do res.push(Main.sphere3());
+    return res;
+  }
+
+  function void main() {
+    var int nx, ny, ns, i, j, s, depth;
+    var Vec3 col, c;
+    var Float u, v;
+    var Ray r;
+    var World world;
+    var Camera cam;
+    var Vec3 lookfrom, lookat, vup;
+    var Float vfov, aspect, aperture, distToFocus;
+
+    do Float.init();
+    do Util.init(18602, 12321);
+
+    let nx = 128; let ny = 64; let ns = 10;//100;
+    // let nx = 32; let ny = 16; let ns = 1;
+    let depth = 10;
+
+    let world = Main.createWorld();
+
+    let lookfrom = Vec3.newXYZi(13, 2, 3);
+    let lookat = Vec3.newXYZi(0, 0, 0);
+    let vup = Vec3.newXYZi(0, 1, 0);
+    let vfov = Float.new(); do vfov.setInt(20);
+    let aspect = Float.new(); do aspect.setInt(nx); do aspect.divInt(ny);
+    let aperture = Float.new(); do aperture.setInt(1); do aperture.divInt(10);
+    let distToFocus = Float.new(); do distToFocus.setInt(10);
+    let cam = Camera.new(lookfrom, lookat, vup, vfov, aspect, aperture, distToFocus);
+
+    let j = 0;
+    while (j < ny) {
+      let i = 0;
+      while (i < nx) {
+        let col = Vec3.newXYZi(0, 0, 0);
+        let s = 0;
+        while (s < ns) {
+          let u = Util.sampleRatio(i, nx);
+          let v = Util.sampleRatio(ny - 1 - j, ny);
+          let r = cam.getRay(u, v);
+          let c = Main.color(r, world, depth);
+          do col.add(c);
+
+          do c.dispose();
+          do r.dispose();
+          do u.dispose();
+          do v.dispose();
+          let s = s + 1;
+        }
+        do col.divInt(s);
+        do col.sqrt();
+        do Screen.setColor(col.r(), col.g(), col.b());
+        do Screen.drawPixel(i, j);
+        do col.dispose();
+        let i = i + 1;
+      }
+      let j = j + 1;
+    }
+    return;
+  }
+}

@@ -1,0 +1,53 @@
+class World {
+  field Array _objects;
+  field int _length, _capacity;
+
+  constructor World new(int capacity) {
+    let _capacity = capacity;
+    let _objects = Array.new(capacity);
+    let _length = 0;
+    return this;
+  }
+
+  method void dispose() {
+    do _objects.dispose();
+		do Memory.deAlloc(this);
+		return;
+  }
+
+  method void push(Sphere o) {
+    if (~(_length < _capacity)) {
+      do Sys.error(21);
+    }
+    let _objects[_length] = o;
+    let _length = _length + 1;
+    return;
+  }
+
+  method HitRecord hit(Ray r, Float t_min, Float t_max) {
+    var HitRecord res, h;
+    var Float closestSoFar;
+    var Sphere s;
+    var int i;
+
+    let res = null;
+    let closestSoFar = Float.newFloat(t_max);
+    let i = 0;
+    while (i < _length) {
+      let s = _objects[i];
+      let h = s.hit(r, t_min, closestSoFar);
+      if (~(h = null)) {
+        if (~(res = null)) {
+          do res.dispose();
+        }
+        let res = h;
+        do closestSoFar.set(res.t());
+      }
+      let i = i + 1;
+    }
+
+    do closestSoFar.dispose();
+    return res;
+  }
+
+}

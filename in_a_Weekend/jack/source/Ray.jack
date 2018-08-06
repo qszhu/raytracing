@@ -1,0 +1,33 @@
+class Ray {
+  field Vec3 _origin, _direction;
+
+  constructor Ray new(Vec3 origin, Vec3 direction) {
+    let _origin = origin;
+    let _direction = direction;
+    return this;
+  }
+
+	method void dispose() {
+    do _origin.dispose();
+    do _direction.dispose();
+		do Memory.deAlloc(this);
+		return;
+	}
+
+  method Vec3 origin() {
+    return _origin;
+  }
+
+  method Vec3 direction() {
+    return _direction;
+  }
+
+  method Vec3 pointAt(Float t) {
+    var Vec3 res;
+    let res = Vec3.newVec3(_direction);
+    do res.multFloat(t);
+    do res.add(_origin);
+    return res;
+  }
+
+}

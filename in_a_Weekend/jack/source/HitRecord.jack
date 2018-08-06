@@ -1,0 +1,38 @@
+class HitRecord {
+  field Float _t;
+  field Vec3 _p, _normal;
+  field Material _matPtr;
+
+  constructor HitRecord new(Float t, Vec3 p, Vec3 normal, Material material) {
+    let _t = t;
+    let _p = p;
+    let _normal = normal;
+    let _matPtr = material;
+    return this;
+  }
+
+	method void dispose() {
+    do _t.dispose();
+    do _p.dispose();
+    do _normal.dispose();
+		do Memory.deAlloc(this);
+		return;
+	}
+
+  method Float t() {
+    return _t;
+  }
+
+  method Vec3 p() {
+    return _p;
+  }
+
+  method Vec3 normal() {
+    return _normal;
+  }
+
+  method Material matPtr() {
+    return _matPtr;
+  }
+
+}

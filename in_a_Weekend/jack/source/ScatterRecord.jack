@@ -1,0 +1,26 @@
+class ScatterRecord {
+  field Vec3 _attenuation;
+  field Ray _scattered;
+
+  constructor ScatterRecord new(Vec3 attenuation, Ray scattered) {
+    let _attenuation = attenuation;
+    let _scattered = scattered;
+    return this;
+  }
+
+  method void dispose() {
+    do _attenuation.dispose();
+    do _scattered.dispose();
+    do Memory.deAlloc(this);
+    return;
+  }
+
+  method Vec3 attenuation() {
+    return _attenuation;
+  }
+
+  method Ray scattered() {
+    return _scattered;
+  }
+
+}

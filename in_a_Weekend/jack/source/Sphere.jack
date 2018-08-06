@@ -1,0 +1,87 @@
+class Sphere {
+  field Vec3 _center;
+  field Float _radius;
+  field Material _material;
+
+  constructor Sphere new(Vec3 center, Float radius, Material material) {
+    let _center = center;
+    let _radius = radius;
+    let _material = material;
+    return this;
+  }
+
+	method void dispose() {
+    do _center.dispose();
+    do _radius.dispose();
+    do _material.dispose();
+		do Memory.deAlloc(this);
+		return;
+	}
+
+  method Vec3 center() {
+    return _center;
+  }
+
+  method Float radius() {
+    return _radius;
+  }
+
+  method HitRecord _calcHitRecord(Ray r, Float t, Float t_min, Float t_max) {
+    var Vec3 p, normal;
+    if ((t.compare(t_max) < 0) & (t.compare(t_min) > 0)) {
+      let p = r.pointAt(t);
+      let normal = Vec3.newVec3(p); do normal.sub(_center);
+      do normal.divFloat(_radius);
+      return HitRecord.new(t, p, normal, _material);
+    }
+    return null;
+  }
+
+  method HitRecord hit(Ray r, Float t_min, Float t_max) {
+    var Vec3 oc;
+    var Float a, b, c, d, t;
+    var HitRecord res;
+
+    let oc = Vec3.newVec3(r.origin());
+    do oc.sub(_center);
+
+    let a = Vec3.Dot(r.direction(), r.direction());
+
+    let b = Vec3.Dot(oc, r.direction());
+
+    let c = Vec3.Dot(oc, oc);
+    let t = Float.newFloat(_radius); do t.mult(_radius);
+    do c.sub(t);
+    do t.dispose();
+
+    let d = Float.newFloat(b); do d.mult(b);
+    let t = Float.newFloat(a); do t.mult(c);
+    do d.sub(t);
+    do t.dispose();
+
+    if (d.isPos()) {
+      let t = Float.newFloat(d); do t.sqrt();
+      do t.neg(); do t.sub(b); do t.div(a);
+      let res = _calcHitRecord(r, t, t_min, t_max);
+      if (res = null) {
+        do t.dispose();
+        let t = Float.newFloat(d); do t.sqrt();
+        do t.sub(b); do t.div(a);
+        let res = _calcHitRecord(r, t, t_min, t_max);
+        if (res = null) {
+          do t.dispose();
+        }
+      }
+    } else {
+      let res = null;
+    }
+
+    do d.dispose();
+    do c.dispose();
+    do b.dispose();
+    do a.dispose();
+    do oc.dispose();
+    return res;
+  }
+
+}
